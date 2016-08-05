@@ -24,7 +24,7 @@ namespace Tonic
         /// </summary>
         /// <typeparam name="T">Your DbContext type</typeparam>
         /// <returns></returns>
-        public static T CreateTransient<T>()
+        public static T Transient<T>()
              where T : DbContext
         {
             return Create<T>(null);
@@ -36,7 +36,7 @@ namespace Tonic
         /// <typeparam name="T">Your DbContext type</typeparam>
         /// <param name="DatabaseId">The Id of the internal in-memory database. Use the same Id for access the persisted data</param>
         /// <returns></returns>
-        public static T CreatePersistent<T>(Guid DatabaseId)
+        public static T Persistent<T>(Guid DatabaseId)
             where T : DbContext
         {
             return Create<T>(DatabaseId);

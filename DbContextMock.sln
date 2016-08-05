@@ -5,7 +5,7 @@ VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbContextMock", "DbContextMock.csproj", "{3B2349B3-B50E-488D-89EB-4DEA8333EFA3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbContextMock.Test", "..\DbContextMock.Test\DbContextMock.Test.csproj", "{EE391B97-6444-4E09-8684-0BEE14FA9419}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbContextMock.Test", "DbContextMock.Test\DbContextMock.Test.csproj", "{EE391B97-6444-4E09-8684-0BEE14FA9419}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
