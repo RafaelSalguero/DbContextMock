@@ -20,6 +20,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Debug\DbContextMock.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -53,11 +54,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Async.cs" />
-    <Compile Include="DbContextInterceptor.cs" />
+    <Compile Include="Internal\Async.cs" />
+    <Compile Include="Internal\DbContextInterceptor.cs" />
     <Compile Include="DbContextMock.cs" />
-    <Compile Include="Database.cs" />
-    <Compile Include="DbSetMock.cs" />
+    <Compile Include="Internal\Database.cs" />
+    <Compile Include="Internal\DbSetMock.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

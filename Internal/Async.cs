@@ -15,7 +15,7 @@ namespace Tonic
     https://msdn.microsoft.com/en-us/data/dn314429
     */
 
-    internal class TestDbAsyncQueryProvider<TEntity> : IDbAsyncQueryProvider
+     class TestDbAsyncQueryProvider<TEntity> : IDbAsyncQueryProvider
     {
         private readonly IQueryProvider _inner;
 
@@ -55,7 +55,7 @@ namespace Tonic
         }
     }
 
-    public class TestDbAsyncEnumerable<T> : EnumerableQuery<T>, IDbAsyncEnumerable<T>, IQueryable<T>
+     class TestDbAsyncEnumerable<T> : EnumerableQuery<T>, IDbAsyncEnumerable<T>, IQueryable<T>
     {
         public TestDbAsyncEnumerable(IEnumerable<T> enumerable) : base(enumerable)
         { }
@@ -79,7 +79,7 @@ namespace Tonic
         }
     }
 
-    internal class TestDbAsyncEnumerator<T> : IDbAsyncEnumerator<T>
+     class TestDbAsyncEnumerator<T> : IDbAsyncEnumerator<T>
     {
         private readonly IEnumerator<T> _inner;
 
