@@ -8,25 +8,34 @@ using Castle.DynamicProxy;
 
 namespace Tonic
 {
-    class ProxyInterceptor : IInterceptor
+    /// <summary>
+    /// Intercepts DbSet properties on a context
+    /// </summary>
+    class DbContextProxyInterceptor : IInterceptor
     {
-        public ProxyInterceptor(Dictionary<Type, object> Sets)
+        public DbContextProxyInterceptor(Dictionary<string , object> Sets)
         {
             this.PropertyValues = Sets;
         }
-        readonly Dictionary<Type, object> PropertyValues;
+        readonly Dictionary<string, object> PropertyValues;
 
         public void Intercept(IInvocation invocation)
         {
             //Substitute DbSet properties and the Set method:
             bool isPropertyGet = invocation.Method.IsSpecialName && invocation.Method.Name.StartsWith("get_");
-            bool isSetMethod = invocation.Method.Name == nameof(DbContext.Set);
+            bool isDbSetMethod = invocation.Method.Name == nameof(DbContext.Set);
 
-            if ((isPropertyGet || isSetMethod) && invocation.Method.ReturnType.IsGenericType && invocation.Method.ReturnType.GetGenericTypeDefinition() == typeof(DbSet<>))
+            if ((isPropertyGet || isDbSetMethod) && invocation.Method.ReturnType.IsGenericType && invocation.Method.ReturnType.GetGenericTypeDefinition() == typeof(DbSet<>))
             {
                 //Return the substitute value
                 var EntityType = invocation.Method.ReturnType.GetGenericArguments()[0];
-                invocation.ReturnValue = PropertyValues[EntityType];
+                var typeName = EntityType.FullName;
+
+                if (!PropertyValues.ContainsKey(typeName))
+                {
+                    throw new ArgumentException($"DbSet mock could not find the property for the type {typeName}");
+                }
+                invocation.ReturnValue = PropertyValues[typeName];
             }
             else
             {
@@ -59,12 +68,12 @@ namespace Tonic
         /// Create an instance of the given DbContext type, substituting DbSet properties
         /// </summary>
         /// <typeparam name="T">The DbContext type</typeparam>
-        /// <param name="Properties">A dictionary where the keys are the entity types and the objects are the substitute DbSet mocks</param>
+        /// <param name="Properties">A dictionary where the keys are the entity types full names and the objects are the substitute DbSet mocks</param>
         /// <returns></returns>
-        public static T Create<T>(Dictionary<Type, object> Properties)
+        public static T Create<T>(Dictionary<string, object> Properties)
             where T : DbContext
         {
-            var Interceptor = new ProxyInterceptor(Properties);
+            var Interceptor = new DbContextProxyInterceptor(Properties);
             return (T)generator.CreateClassProxy(typeof(T), Interceptor);
         }
     }
