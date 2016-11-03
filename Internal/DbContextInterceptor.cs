@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Castle.DynamicProxy;
+using Tonic.Internal;
 
 namespace Tonic
 {
@@ -13,12 +14,13 @@ namespace Tonic
     /// </summary>
     class DbContextProxyInterceptor : IInterceptor
     {
-        public DbContextProxyInterceptor(Dictionary<string , object> Sets)
+        public DbContextProxyInterceptor(InMemoryMockDatabase database)
         {
-            this.PropertyValues = Sets;
+            this.database = database;
         }
-        readonly Dictionary<string, object> PropertyValues;
 
+        readonly InMemoryMockDatabase database;
+        private Dictionary<Type, object> setValues = new Dictionary<Type, object>();
         public void Intercept(IInvocation invocation)
         {
             //Substitute DbSet properties and the Set method:
@@ -28,14 +30,17 @@ namespace Tonic
             if ((isPropertyGet || isDbSetMethod) && invocation.Method.ReturnType.IsGenericType && invocation.Method.ReturnType.GetGenericTypeDefinition() == typeof(DbSet<>))
             {
                 //Return the substitute value
-                var EntityType = invocation.Method.ReturnType.GetGenericArguments()[0];
-                var typeName = EntityType.FullName;
+                object returnValue;
+                var entityType = invocation.Method.ReturnType.GetGenericArguments()[0];
 
-                if (!PropertyValues.ContainsKey(typeName))
+                if (!setValues.TryGetValue(entityType, out returnValue))
                 {
-                    throw new ArgumentException($"DbSet mock could not find the property for the type {typeName}");
+                    var collection = database.Set(entityType);
+                    returnValue = DbSetMockFactory.Create(entityType, collection);
+                    setValues.Add(entityType, returnValue);
                 }
-                invocation.ReturnValue = PropertyValues[typeName];
+
+                invocation.ReturnValue = returnValue;
             }
             else
             {
@@ -70,10 +75,21 @@ namespace Tonic
         /// <typeparam name="T">The DbContext type</typeparam>
         /// <param name="Properties">A dictionary where the keys are the entity types full names and the objects are the substitute DbSet mocks</param>
         /// <returns></returns>
-        public static T Create<T>(Dictionary<string, object> Properties)
+        public static T Create<T>(InMemoryMockDatabase database)
             where T : DbContext
         {
-            var Interceptor = new DbContextProxyInterceptor(Properties);
+            //Check that all DbSet properties are marked as virtual:
+            var DbSetNotVirtualProperties =
+                typeof(T).GetProperties()
+                .Where(x => x.PropertyType.IsGenericType && x.PropertyType.GetGenericTypeDefinition() == typeof(DbSet<>) && x.CanRead)
+                .Where(x => !x.GetGetMethod().IsVirtual);
+
+            if (DbSetNotVirtualProperties.Any())
+            {
+                var names = DbSetNotVirtualProperties.Select(x => x.Name).Aggregate("", (a, b) => a == "" ? b : a + ", " + b);
+                throw new ArgumentException($"There are some DbSet properties on type {typeof(T)} that are not virtual and thus the DbContextInterceptor is not able to mock it: {names}");
+            }
+            var Interceptor = new DbContextProxyInterceptor(database);
             return (T)generator.CreateClassProxy(typeof(T), Interceptor);
         }
     }

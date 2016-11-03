@@ -34,7 +34,11 @@ namespace DbContextMock.Test
             {
                 Assert.AreEqual(2, C.Customer.Count());
                 Assert.AreEqual(2, C.Set<Customer>().Count());
+                //The set instance should be the same:
                 Assert.AreEqual(C.Set<Customer>(), C.Customer);
+                Assert.AreEqual(C.Set<Customer>(), C.Set<Customer>());
+                Assert.AreEqual(C.Customer, C.Customer);
+
             }
         }
 

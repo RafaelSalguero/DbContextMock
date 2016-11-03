@@ -33,7 +33,7 @@ namespace Tonic
         }
 
         /// <summary>
-        /// Gets the list that mocks a database table
+        /// Gets the ObservableCollection that mocks a database table
         /// </summary>
         /// <typeparam name="T">Entity type</typeparam>
         /// <returns></returns>
