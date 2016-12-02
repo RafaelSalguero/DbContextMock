@@ -42,18 +42,33 @@ namespace Tonic
             return Create<T>(DatabaseId);
         }
 
+
+
         /// <summary>
         /// Create an in-memory typed DbContext
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="DatabaseId">The Id of the in-memory database. Use the same Id between calls for persisting state between DbContext instances. Use null for not persisting state at all</param>
+        /// <param name="type">DbContext type</param>
         /// <returns></returns>
-        private static T Create<T>(Guid? DatabaseId)
+        public static T Create<T>(Guid? DatabaseId)
             where T : DbContext
+        {
+            return (T)Create(DatabaseId, typeof(T));
+        }
+
+        /// <summary>
+        /// Create an in-memory typed DbContext
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="DatabaseId">The Id of the in-memory database. Use the same Id between calls for persisting state between DbContext instances. Use null for not persisting state at all</param>
+        /// <param name="type">DbContext type</param>
+        /// <returns></returns>
+        public static object Create(Guid? DatabaseId, Type type)
         {
             var database = DatabaseId.HasValue ? InMemoryMockDatabase.GetDatabase(DatabaseId.Value) : new InMemoryMockDatabase();
 
-            return DbContextFactory.Create<T>(database);
+            return DbContextFactory.Create(database, type );
         }
     }
 }

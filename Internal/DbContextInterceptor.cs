@@ -73,24 +73,24 @@ namespace Tonic
         /// Create an instance of the given DbContext type, substituting DbSet properties
         /// </summary>
         /// <typeparam name="T">The DbContext type</typeparam>
-        /// <param name="Properties">A dictionary where the keys are the entity types full names and the objects are the substitute DbSet mocks</param>
+        /// <param name="database">The in memory database</param>
+        /// <param name="type">DbContext type</param>
         /// <returns></returns>
-        public static T Create<T>(InMemoryMockDatabase database)
-            where T : DbContext
+        public static object Create(InMemoryMockDatabase database, Type type)
         {
             //Check that all DbSet properties are marked as virtual:
             var DbSetNotVirtualProperties =
-                typeof(T).GetProperties()
+                type.GetProperties()
                 .Where(x => x.PropertyType.IsGenericType && x.PropertyType.GetGenericTypeDefinition() == typeof(DbSet<>) && x.CanRead)
                 .Where(x => !x.GetGetMethod().IsVirtual);
 
             if (DbSetNotVirtualProperties.Any())
             {
                 var names = DbSetNotVirtualProperties.Select(x => x.Name).Aggregate("", (a, b) => a == "" ? b : a + ", " + b);
-                throw new ArgumentException($"There are some DbSet properties on type {typeof(T)} that are not virtual and thus the DbContextInterceptor is not able to mock it: {names}");
+                throw new ArgumentException($"There are some DbSet properties on type {type} that are not virtual and thus the DbContextInterceptor is not able to mock it: {names}");
             }
             var Interceptor = new DbContextProxyInterceptor(database);
-            return (T)generator.CreateClassProxy(typeof(T), Interceptor);
+            return generator.CreateClassProxy(type, Interceptor);
         }
     }
 

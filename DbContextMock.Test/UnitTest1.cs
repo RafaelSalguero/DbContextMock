@@ -174,7 +174,27 @@ namespace DbContextMock.Test
             var Y = Tonic.DbContextMock.Persistent<Db>(DbId);
 
             Assert.AreEqual(Customer, Y.Customer.First());
+        }
 
+        [TestMethod]
+        public async Task FindTest()
+        {
+            using (var c = Tonic.DbContextMock.Transient<Db>())
+            {
+                var Customer = new Customer
+                {
+                    Name = "Rafa",
+                    Id = 10,
+                    Email = "rafaelsalgueroiturrios@gmail.comn"
+                };
+                c.Customer.Add(Customer);
+
+                Assert.IsNull(c.Customer.Find(1));
+                Assert.IsNull(c.Product.Find(1));
+
+                Assert.IsNotNull(c.Customer.Find(10));
+                Assert.AreEqual("Rafa", (await c.Customer.FindAsync(10)).Name);
+            }
         }
     }
 }

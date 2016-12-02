@@ -60,6 +60,7 @@
     <Compile Include="Internal\Database.cs" />
     <Compile Include="Internal\DbSetMock.cs" />
     <Compile Include="Internal\DbSetMockFactory.cs" />
+    <Compile Include="Internal\PredicateBuilder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -2,13 +2,17 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Tonic.Internal;
 
 namespace Tonic
 {
@@ -25,7 +29,18 @@ namespace Tonic
             local = list;
             query = list.AsQueryable();
             this.provider = new TestDbAsyncQueryProvider<T>(query.Provider);
+
+            this.primaryKey = typeof(T)
+                .GetProperties()
+                .Select(x => new { name = x.Name, att = x.GetCustomAttribute<KeyAttribute>(), order = x.GetCustomAttribute<ColumnAttribute>()?.Order ?? 0 })
+                .Where(x => x.att != null)
+                .OrderBy(x => x.order)
+                .Select(x => x.name)
+                .ToList();
+
         }
+
+        readonly IReadOnlyList<string> primaryKey;
 
         private ObservableCollection<T> local;
         private IQueryable<T> query;
@@ -92,6 +107,28 @@ namespace Tonic
         public override DbSqlQuery<T> SqlQuery(string sql, params object[] parameters)
         {
             throw new NotImplementedException("This method is not implemented");
+        }
+
+        public override T Find(params object[] keyValues)
+        {
+            var expr = PredicateBuilder.PredicateEqual<T>(primaryKey.Zip(keyValues, (a, b) => Tuple.Create(a, b)));
+            var finds = query.Where(expr).ToList();
+            if (finds.Count == 0)
+                return null;
+            else if (finds.Count == 1)
+                return finds[0];
+            else
+                throw new InvalidOperationException();
+        }
+
+        public override Task<T> FindAsync(CancellationToken token, params object[] keyValues)
+        {
+            return Task.FromResult(Find(keyValues));
+        }
+
+        public override Task<T> FindAsync(params object[] keyValues)
+        {
+            return FindAsync(new CancellationToken(), keyValues);
         }
 
         IEnumerator<T> IEnumerable<T>.GetEnumerator()
