@@ -37,6 +37,8 @@ namespace DbContextMock.Test
                 //The set instance should be the same:
                 Assert.AreEqual(C.Set<Customer>(), C.Customer);
                 Assert.AreEqual(C.Set<Customer>(), C.Set<Customer>());
+                Assert.AreEqual(C.Set<Customer>().Local, C.Set(typeof(Customer)).Local);
+                Assert.AreEqual(typeof(Customer), C.Set(typeof(Customer)).ElementType);
                 Assert.AreEqual(C.Customer, C.Customer);
 
             }
@@ -194,6 +196,8 @@ namespace DbContextMock.Test
 
                 Assert.IsNotNull(c.Customer.Find(10));
                 Assert.AreEqual("Rafa", (await c.Customer.FindAsync(10)).Name);
+                Assert.AreEqual("Rafa", (await c.Set<Customer>().FindAsync(10)).Name);
+                Assert.AreEqual("Rafa", ((Customer)(await c.Set(typeof(Customer)).FindAsync(10))).Name);
             }
         }
     }

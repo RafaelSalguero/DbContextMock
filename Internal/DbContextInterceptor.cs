@@ -20,7 +20,21 @@ namespace Tonic
         }
 
         readonly InMemoryMockDatabase database;
-        private Dictionary<Type, object> setValues = new Dictionary<Type, object>();
+        private Dictionary<Type, IDbSetMock> setValues = new Dictionary<Type, IDbSetMock>();
+
+        public IDbSetMock GetDbSet(Type entityType)
+        {
+            //Return the substitute value
+            IDbSetMock returnValue;
+
+            if (!setValues.TryGetValue(entityType, out returnValue))
+            {
+                var collection = database.Set(entityType);
+                returnValue = DbSetMockFactory.Create(entityType, collection);
+                setValues.Add(entityType, returnValue);
+            }
+            return returnValue;
+        }
         public void Intercept(IInvocation invocation)
         {
             //Substitute DbSet properties and the Set method:
@@ -29,21 +43,17 @@ namespace Tonic
 
             if ((isPropertyGet || isDbSetMethod) && invocation.Method.ReturnType.IsGenericType && invocation.Method.ReturnType.GetGenericTypeDefinition() == typeof(DbSet<>))
             {
-                //Return the substitute value
-                object returnValue;
                 var entityType = invocation.Method.ReturnType.GetGenericArguments()[0];
-
-                if (!setValues.TryGetValue(entityType, out returnValue))
-                {
-                    var collection = database.Set(entityType);
-                    returnValue = DbSetMockFactory.Create(entityType, collection);
-                    setValues.Add(entityType, returnValue);
-                }
-
-                invocation.ReturnValue = returnValue;
+                invocation.ReturnValue = GetDbSet(entityType);
+            }
+            else if (isDbSetMethod && invocation.Method.ReturnType == typeof(DbSet))
+            {
+                var entityType = (Type)invocation.Arguments[0]; ;
+                invocation.ReturnValue = GetDbSet(entityType).genericSet;
             }
             else
             {
+
                 //Continue with normal execution
                 invocation.Proceed();
             }
